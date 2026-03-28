@@ -6,8 +6,6 @@ import java.sql.SQLException;
 
 public class DBUtil {
 
-    private static final String MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
-
     public static Connection getConnection() throws Exception {
         String dbUrl = System.getenv("DB_URL");
         String dbUser = System.getenv("DB_USER");
@@ -17,24 +15,21 @@ public class DBUtil {
                 || dbUrl.trim().isEmpty()
                 || dbUser.trim().isEmpty()
                 || dbPass.trim().isEmpty()) {
-            throw new SQLException("Database environment variables are missing. Please set DB_URL, DB_USER, and DB_PASSWORD.");
+            throw new SQLException("Database environment variables are missing. Set DB_URL, DB_USER and DB_PASSWORD.");
         }
 
         dbUrl = dbUrl.trim();
         dbUser = dbUser.trim();
         dbPass = dbPass.trim();
 
-        // If accidentally stored like: DB_URL=mysql://...
         if (dbUrl.startsWith("DB_URL=")) {
-            dbUrl = dbUrl.substring("DB_URL=".length()).trim();
+            dbUrl = dbUrl.substring(7).trim();
         }
 
-        // Convert Railway style mysql://... to jdbc:mysql://...
         if (dbUrl.startsWith("mysql://")) {
             dbUrl = "jdbc:" + dbUrl;
         }
 
-        // If already jdbc url but missing params
         if (dbUrl.startsWith("jdbc:mysql://")) {
             if (!dbUrl.contains("?")) {
                 dbUrl += "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
@@ -50,10 +45,10 @@ public class DBUtil {
                 }
             }
         } else {
-            throw new SQLException("Invalid DB_URL format. Expected MySQL JDBC URL.");
+            throw new SQLException("Invalid DB_URL format: " + dbUrl);
         }
 
-        Class.forName(MYSQL_DRIVER);
+        Class.forName("com.mysql.cj.jdbc.Driver");
         return DriverManager.getConnection(dbUrl, dbUser, dbPass);
     }
 }
