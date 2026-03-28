@@ -15,53 +15,44 @@ import javax.servlet.http.HttpServletResponse;
 
 public class SignupServlet extends HttpServlet {
 
-    private static final String FRONTEND_URL = "https://dear-dreamers-frontend.vercel.app";
+    private void setCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
+        String origin = request.getHeader("Origin");
 
-    private void setCorsHeaders(HttpServletResponse response) {
-        response.setHeader("Access-Control-Allow-Origin", FRONTEND_URL);
+        if (
+            "https://dear-dreamers-frontend.vercel.app".equals(origin) ||
+            "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin) ||
+            "http://localhost:3000".equals(origin)
+        ) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+        }
+
+        response.setHeader("Vary", "Origin");
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
         response.setHeader("Access-Control-Allow-Headers", "Content-Type");
         response.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
-    protected void processRequest(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        setCorsHeaders(response);
-        response.setContentType("text/html;charset=UTF-8");
-
-        try (PrintWriter out = response.getWriter()) {
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet SignupServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet SignupServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
-        }
-    }
-
     @Override
     protected void doOptions(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        setCorsHeaders(response);
+        setCorsHeaders(request, response);
         response.setStatus(HttpServletResponse.SC_OK);
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        processRequest(request, response);
+        setCorsHeaders(request, response);
+        response.setContentType("text/plain;charset=UTF-8");
+        response.getWriter().print("SignupServlet is running");
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        setCorsHeaders(response);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        setCorsHeaders(request, response);
+        response.setContentType("text/plain;charset=UTF-8");
 
         PrintWriter pw = response.getWriter();
 
@@ -79,6 +70,11 @@ public class SignupServlet extends HttpServlet {
             InputStream input = getClass()
                     .getClassLoader()
                     .getResourceAsStream("config.properties");
+
+            if (input == null) {
+                pw.print("Error: config.properties not found");
+                return;
+            }
 
             prop.load(input);
 
