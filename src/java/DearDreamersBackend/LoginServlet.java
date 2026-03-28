@@ -2,13 +2,10 @@ package DearDreamersBackend;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -20,11 +17,9 @@ public class LoginServlet extends HttpServlet {
     private void setCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
         String origin = request.getHeader("Origin");
 
-        if (
-            "https://dear-dreamers-frontend.vercel.app".equals(origin) ||
-            "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin) ||
-            "http://localhost:3000".equals(origin)
-        ) {
+        if ("https://dear-dreamers-frontend.vercel.app".equals(origin)
+                || "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin)
+                || "http://localhost:3000".equals(origin)) {
             response.setHeader("Access-Control-Allow-Origin", origin);
         }
 
@@ -66,27 +61,11 @@ public class LoginServlet extends HttpServlet {
         ResultSet rs = null;
 
         try {
-            Properties prop = new Properties();
-            InputStream input = getClass()
-                    .getClassLoader()
-                    .getResourceAsStream("config.properties");
+            con = DBUtil.getConnection();
 
-            if (input == null) {
-                pw.print("Error: config.properties not found");
-                return;
-            }
-
-            prop.load(input);
-
-            String dbUrl = prop.getProperty("db.url");
-            String dbUser = prop.getProperty("db.username");
-            String dbPass = prop.getProperty("db.password");
-
-            Class.forName("com.mysql.cj.jdbc.Driver");
-
-            con = DriverManager.getConnection(dbUrl, dbUser, dbPass);
-            ps = con.prepareStatement("SELECT * FROM students WHERE email = ? AND s_password = ?");
-
+            ps = con.prepareStatement(
+                    "SELECT * FROM students WHERE email = ? AND s_password = ?"
+            );
             ps.setString(1, email);
             ps.setString(2, passW);
 
@@ -101,18 +80,16 @@ public class LoginServlet extends HttpServlet {
                 pw.print("Invalid Email or Password");
             }
 
-        } catch (ClassNotFoundException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
-            pw.print("Server error");
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            pw.print("Database error");
+            pw.print("Error: " + ex.getMessage());
         } finally {
             try {
                 if (rs != null) rs.close();
                 if (ps != null) ps.close();
                 if (con != null) con.close();
-            } catch (Exception ignored) {}
+            } catch (SQLException ignored) {
+            }
         }
     }
 }

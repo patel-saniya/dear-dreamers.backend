@@ -2,13 +2,10 @@ package DearDreamersBackend;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -20,11 +17,9 @@ public class SaveScoreServlet extends HttpServlet {
     private void setCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
         String origin = request.getHeader("Origin");
 
-        if (
-            "https://dear-dreamers-frontend.vercel.app".equals(origin) ||
-            "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin) ||
-            "http://localhost:3000".equals(origin)
-        ) {
+        if ("https://dear-dreamers-frontend.vercel.app".equals(origin)
+                || "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin)
+                || "http://localhost:3000".equals(origin)) {
             response.setHeader("Access-Control-Allow-Origin", origin);
         }
 
@@ -79,25 +74,7 @@ public class SaveScoreServlet extends HttpServlet {
         ResultSet rs = null;
 
         try {
-            Properties prop = new Properties();
-            InputStream input = getClass()
-                    .getClassLoader()
-                    .getResourceAsStream("config.properties");
-
-            if (input == null) {
-                pw.print("{\"message\":\"config.properties not found\"}");
-                return;
-            }
-
-            prop.load(input);
-
-            String dbUrl = prop.getProperty("db.url");
-            String dbUser = prop.getProperty("db.username");
-            String dbPass = prop.getProperty("db.password");
-
-            Class.forName("com.mysql.cj.jdbc.Driver");
-
-            con = DriverManager.getConnection(dbUrl, dbUser, dbPass);
+            con = DBUtil.getConnection();
 
             checkPs = con.prepareStatement(
                     "SELECT student_id FROM quiz_score WHERE student_id = ? AND alphabet = ?"
@@ -109,10 +86,8 @@ public class SaveScoreServlet extends HttpServlet {
 
             if (rs.next()) {
                 updatePs = con.prepareStatement(
-                        "UPDATE quiz_score SET correct_count = ?, wrong_count = ?, score = ? " +
-                        "WHERE student_id = ? AND alphabet = ?"
+                        "UPDATE quiz_score SET correct_count = ?, wrong_count = ?, score = ? WHERE student_id = ? AND alphabet = ?"
                 );
-
                 updatePs.setInt(1, correctCount);
                 updatePs.setInt(2, wrongCount);
                 updatePs.setInt(3, score);
@@ -121,12 +96,10 @@ public class SaveScoreServlet extends HttpServlet {
 
                 updatePs.executeUpdate();
                 pw.print("{\"message\":\"Score updated successfully\"}");
-
             } else {
                 insertPs = con.prepareStatement(
-                        "INSERT INTO quiz_score (student_id, alphabet, correct_count, wrong_count, score) VALUES (?,?,?,?,?)"
+                        "INSERT INTO quiz_score (student_id, alphabet, correct_count, wrong_count, score) VALUES (?, ?, ?, ?, ?)"
                 );
-
                 insertPs.setInt(1, studentId);
                 insertPs.setString(2, alphabet);
                 insertPs.setInt(3, correctCount);
@@ -139,7 +112,7 @@ public class SaveScoreServlet extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            pw.print("{\"message\":\"Error saving score\"}");
+            pw.print("{\"message\":\"Error: " + e.getMessage().replace("\"", "\\\"") + "\"}");
         } finally {
             try {
                 if (rs != null) rs.close();
@@ -147,7 +120,8 @@ public class SaveScoreServlet extends HttpServlet {
                 if (insertPs != null) insertPs.close();
                 if (updatePs != null) updatePs.close();
                 if (con != null) con.close();
-            } catch (SQLException ignored) {}
+            } catch (SQLException ignored) {
+            }
         }
     }
 }

@@ -2,12 +2,10 @@ package DearDreamersBackend;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.InputStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Properties;
+import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -19,11 +17,9 @@ public class ResultServlet extends HttpServlet {
     private void setCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
         String origin = request.getHeader("Origin");
 
-        if (
-            "https://dear-dreamers-frontend.vercel.app".equals(origin) ||
-            "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin) ||
-            "http://localhost:3000".equals(origin)
-        ) {
+        if ("https://dear-dreamers-frontend.vercel.app".equals(origin)
+                || "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin)
+                || "http://localhost:3000".equals(origin)) {
             response.setHeader("Access-Control-Allow-Origin", origin);
         }
 
@@ -72,30 +68,11 @@ public class ResultServlet extends HttpServlet {
         ResultSet rs = null;
 
         try {
-            Properties prop = new Properties();
-            InputStream input = getClass()
-                    .getClassLoader()
-                    .getResourceAsStream("config.properties");
-
-            if (input == null) {
-                pw.print("[]");
-                return;
-            }
-
-            prop.load(input);
-
-            String dbUrl = prop.getProperty("db.url");
-            String dbUser = prop.getProperty("db.username");
-            String dbPass = prop.getProperty("db.password");
-
-            Class.forName("com.mysql.cj.jdbc.Driver");
-
-            con = DriverManager.getConnection(dbUrl, dbUser, dbPass);
+            con = DBUtil.getConnection();
 
             ps = con.prepareStatement(
                     "SELECT alphabet, correct_count, wrong_count, score FROM quiz_score WHERE student_id = ?"
             );
-
             ps.setInt(1, studentId);
             rs = ps.executeQuery();
 
@@ -103,7 +80,9 @@ public class ResultServlet extends HttpServlet {
             boolean first = true;
 
             while (rs.next()) {
-                if (!first) json.append(",");
+                if (!first) {
+                    json.append(",");
+                }
                 first = false;
 
                 json.append("{");
@@ -125,7 +104,8 @@ public class ResultServlet extends HttpServlet {
                 if (rs != null) rs.close();
                 if (ps != null) ps.close();
                 if (con != null) con.close();
-            } catch (Exception ignored) {}
+            } catch (SQLException ignored) {
+            }
         }
     }
 }

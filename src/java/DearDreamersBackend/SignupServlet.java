@@ -3,7 +3,6 @@ package DearDreamersBackend;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import javax.servlet.ServletException;
@@ -62,21 +61,7 @@ public class SignupServlet extends HttpServlet {
         PreparedStatement ps = null;
 
         try {
-            String dbUrl = System.getenv("DB_URL");
-            String dbUser = System.getenv("DB_USER");
-            String dbPass = System.getenv("DB_PASSWORD");
-
-            if (dbUrl == null || dbUser == null || dbPass == null
-                    || dbUrl.trim().isEmpty()
-                    || dbUser.trim().isEmpty()
-                    || dbPass.trim().isEmpty()) {
-                pw.print("Error: Database environment variables are missing.");
-                return;
-            }
-
-            Class.forName("com.mysql.cj.jdbc.Driver");
-
-            con = DriverManager.getConnection(dbUrl, dbUser, dbPass);
+            con = DBUtil.getConnection();
 
             ps = con.prepareStatement(
                     "INSERT INTO students(first_name, last_name, age, email, s_password) VALUES (?, ?, ?, ?, ?)"
