@@ -2,12 +2,10 @@ package DearDreamersBackend;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -18,11 +16,9 @@ public class SignupServlet extends HttpServlet {
     private void setCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
         String origin = request.getHeader("Origin");
 
-        if (
-            "https://dear-dreamers-frontend.vercel.app".equals(origin) ||
-            "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin) ||
-            "http://localhost:3000".equals(origin)
-        ) {
+        if ("https://dear-dreamers-frontend.vercel.app".equals(origin)
+                || "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin)
+                || "http://localhost:3000".equals(origin)) {
             response.setHeader("Access-Control-Allow-Origin", origin);
         }
 
@@ -66,27 +62,24 @@ public class SignupServlet extends HttpServlet {
         PreparedStatement ps = null;
 
         try {
-            Properties prop = new Properties();
-            InputStream input = getClass()
-                    .getClassLoader()
-                    .getResourceAsStream("config.properties");
+            String dbUrl = System.getenv("DB_URL");
+            String dbUser = System.getenv("DB_USER");
+            String dbPass = System.getenv("DB_PASSWORD");
 
-            if (input == null) {
-                pw.print("Error: config.properties not found");
+            if (dbUrl == null || dbUser == null || dbPass == null
+                    || dbUrl.trim().isEmpty()
+                    || dbUser.trim().isEmpty()
+                    || dbPass.trim().isEmpty()) {
+                pw.print("Error: Database environment variables are missing.");
                 return;
             }
 
-            prop.load(input);
-
-            String dbUrl = prop.getProperty("db.url");
-            String dbUser = prop.getProperty("db.username");
-            String dbPass = prop.getProperty("db.password");
-
             Class.forName("com.mysql.cj.jdbc.Driver");
+
             con = DriverManager.getConnection(dbUrl, dbUser, dbPass);
 
             ps = con.prepareStatement(
-                    "INSERT INTO students(first_name,last_name,age,email,s_password) VALUES(?,?,?,?,?)"
+                    "INSERT INTO students(first_name, last_name, age, email, s_password) VALUES (?, ?, ?, ?, ?)"
             );
 
             ps.setString(1, name);
@@ -110,7 +103,8 @@ public class SignupServlet extends HttpServlet {
             try {
                 if (ps != null) ps.close();
                 if (con != null) con.close();
-            } catch (SQLException ignored) {}
+            } catch (SQLException ignored) {
+            }
         }
     }
 }
