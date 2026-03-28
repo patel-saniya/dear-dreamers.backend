@@ -6,6 +6,8 @@ import java.sql.SQLException;
 
 public class DBUtil {
 
+    private static final String MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver";
+
     public static Connection getConnection() throws Exception {
         String dbUrl = System.getenv("DB_URL");
         String dbUser = System.getenv("DB_USER");
@@ -15,34 +17,43 @@ public class DBUtil {
                 || dbUrl.trim().isEmpty()
                 || dbUser.trim().isEmpty()
                 || dbPass.trim().isEmpty()) {
-            throw new SQLException("Database environment variables are missing.");
+            throw new SQLException("Database environment variables are missing. Please set DB_URL, DB_USER, and DB_PASSWORD.");
         }
 
         dbUrl = dbUrl.trim();
+        dbUser = dbUser.trim();
+        dbPass = dbPass.trim();
 
-        // If user accidentally stored "DB_URL=..." in Render
+        // If accidentally stored like: DB_URL=mysql://...
         if (dbUrl.startsWith("DB_URL=")) {
-            dbUrl = dbUrl.substring(7);
+            dbUrl = dbUrl.substring("DB_URL=".length()).trim();
         }
 
-        // If Railway URL is mysql://..., convert it to jdbc:mysql://...
+        // Convert Railway style mysql://... to jdbc:mysql://...
         if (dbUrl.startsWith("mysql://")) {
             dbUrl = "jdbc:" + dbUrl;
         }
 
-        // Add params if not already present
-        if (dbUrl.startsWith("jdbc:mysql://") && !dbUrl.contains("?")) {
-            dbUrl = dbUrl + "?useSSL=false&serverTimezone=UTC";
-        } else if (dbUrl.startsWith("jdbc:mysql://") && dbUrl.contains("?")) {
-            if (!dbUrl.contains("useSSL=")) {
-                dbUrl = dbUrl + "&useSSL=false";
+        // If already jdbc url but missing params
+        if (dbUrl.startsWith("jdbc:mysql://")) {
+            if (!dbUrl.contains("?")) {
+                dbUrl += "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+            } else {
+                if (!dbUrl.contains("useSSL=")) {
+                    dbUrl += "&useSSL=false";
+                }
+                if (!dbUrl.contains("allowPublicKeyRetrieval=")) {
+                    dbUrl += "&allowPublicKeyRetrieval=true";
+                }
+                if (!dbUrl.contains("serverTimezone=")) {
+                    dbUrl += "&serverTimezone=UTC";
+                }
             }
-            if (!dbUrl.contains("serverTimezone=")) {
-                dbUrl = dbUrl + "&serverTimezone=UTC";
-            }
+        } else {
+            throw new SQLException("Invalid DB_URL format. Expected MySQL JDBC URL.");
         }
 
-        Class.forName("com.mysql.cj.jdbc.Driver");
+        Class.forName(MYSQL_DRIVER);
         return DriverManager.getConnection(dbUrl, dbUser, dbPass);
     }
 }

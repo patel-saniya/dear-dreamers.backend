@@ -15,15 +15,16 @@ public class SignupServlet extends HttpServlet {
     private void setCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
         String origin = request.getHeader("Origin");
 
-        if ("https://dear-dreamers-frontend.vercel.app".equals(origin)
-                || "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin)
-                || "http://localhost:3000".equals(origin)) {
+        if (origin != null &&
+            (origin.equals("http://localhost:3000")
+            || origin.equals("https://dear-dreamers-frontend.vercel.app")
+            || origin.endsWith(".vercel.app"))) {
             response.setHeader("Access-Control-Allow-Origin", origin);
         }
 
         response.setHeader("Vary", "Origin");
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
         response.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
@@ -64,7 +65,7 @@ public class SignupServlet extends HttpServlet {
             con = DBUtil.getConnection();
 
             ps = con.prepareStatement(
-                    "INSERT INTO students(first_name, last_name, age, email, s_password) VALUES (?, ?, ?, ?, ?)"
+                "INSERT INTO students(first_name, last_name, age, email, s_password) VALUES (?, ?, ?, ?, ?)"
             );
 
             ps.setString(1, name);

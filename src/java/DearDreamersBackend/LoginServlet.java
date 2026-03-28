@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -51,45 +50,39 @@ public class LoginServlet extends HttpServlet {
         setCorsHeaders(request, response);
         response.setContentType("text/plain;charset=UTF-8");
 
-        PrintWriter pw = response.getWriter();
-
         String email = request.getParameter("email");
-        String passW = request.getParameter("password");
+        String password = request.getParameter("password");
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+        if (email == null || password == null || email.trim().isEmpty() || password.trim().isEmpty()) {
+            response.getWriter().print("Email and password are required");
+            return;
+        }
 
-        try {
-            con = DBUtil.getConnection();
+        String sql = "SELECT student_id FROM students WHERE email = ? AND s_password = ?";
 
-            ps = con.prepareStatement(
-                    "SELECT * FROM students WHERE email = ? AND s_password = ?"
-            );
-            ps.setString(1, email);
-            ps.setString(2, passW);
+        try (
+            Connection con = DBUtil.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)
+        ) {
+            ps.setString(1, email.trim());
+            ps.setString(2, password.trim());
 
-            rs = ps.executeQuery();
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int studentId = rs.getInt("student_id");
 
-            if (rs.next()) {
-                int studentId = rs.getInt("student_id");
-                HttpSession session = request.getSession();
-                session.setAttribute("student_id", studentId);
-                pw.print("Login successful");
-            } else {
-                pw.print("Invalid Email or Password");
+                    HttpSession session = request.getSession(true);
+                    session.setAttribute("student_id", studentId);
+
+                    response.getWriter().print("Login successful");
+                } else {
+                    response.getWriter().print("Invalid Email or Password");
+                }
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            pw.print("Error: " + ex.getMessage());
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException ignored) {
-            }
+            response.getWriter().print("Error: " + ex.getMessage());
         }
     }
 }

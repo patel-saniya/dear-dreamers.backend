@@ -5,7 +5,6 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -49,11 +48,9 @@ public class ResultServlet extends HttpServlet {
             throws ServletException, IOException {
 
         setCorsHeaders(request, response);
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
 
         PrintWriter pw = response.getWriter();
-
         HttpSession session = request.getSession(false);
 
         if (session == null || session.getAttribute("student_id") == null) {
@@ -61,51 +58,51 @@ public class ResultServlet extends HttpServlet {
             return;
         }
 
-        int studentId = (int) session.getAttribute("student_id");
+        int studentId = (Integer) session.getAttribute("student_id");
 
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+        String sql = "SELECT alphabet, correct_count, wrong_count, score FROM quiz_score WHERE student_id = ?";
 
-        try {
-            con = DBUtil.getConnection();
-
-            ps = con.prepareStatement(
-                    "SELECT alphabet, correct_count, wrong_count, score FROM quiz_score WHERE student_id = ?"
-            );
+        try (
+            Connection con = DBUtil.getConnection();
+            PreparedStatement ps = con.prepareStatement(sql)
+        ) {
             ps.setInt(1, studentId);
-            rs = ps.executeQuery();
 
-            StringBuilder json = new StringBuilder("[");
-            boolean first = true;
+            try (ResultSet rs = ps.executeQuery()) {
+                StringBuilder json = new StringBuilder();
+                json.append("[");
 
-            while (rs.next()) {
-                if (!first) {
-                    json.append(",");
+                boolean first = true;
+
+                while (rs.next()) {
+                    if (!first) {
+                        json.append(",");
+                    }
+                    first = false;
+
+                    String alphabet = rs.getString("alphabet");
+                    if (alphabet == null) {
+                        alphabet = "";
+                    }
+
+                    // Escape quotes in alphabet just in case
+                    alphabet = alphabet.replace("\\", "\\\\").replace("\"", "\\\"");
+
+                    json.append("{");
+                    json.append("\"alphabet\":\"").append(alphabet).append("\",");
+                    json.append("\"correct_count\":").append(rs.getInt("correct_count")).append(",");
+                    json.append("\"wrong_count\":").append(rs.getInt("wrong_count")).append(",");
+                    json.append("\"score\":").append(rs.getInt("score"));
+                    json.append("}");
                 }
-                first = false;
 
-                json.append("{");
-                json.append("\"alphabet\":\"").append(rs.getString("alphabet")).append("\",");
-                json.append("\"correct_count\":").append(rs.getInt("correct_count")).append(",");
-                json.append("\"wrong_count\":").append(rs.getInt("wrong_count")).append(",");
-                json.append("\"score\":").append(rs.getInt("score"));
-                json.append("}");
+                json.append("]");
+                pw.print(json.toString());
             }
-
-            json.append("]");
-            pw.print(json.toString());
 
         } catch (Exception e) {
             e.printStackTrace();
             pw.print("[]");
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException ignored) {
-            }
         }
     }
 }
