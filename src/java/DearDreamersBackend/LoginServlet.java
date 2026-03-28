@@ -17,7 +17,7 @@ import javax.servlet.http.HttpSession;
 
 public class LoginServlet extends HttpServlet {
 
-    private static final String FRONTEND_URL = "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app";
+    private static final String FRONTEND_URL = "https://dear-dreamers-frontend.vercel.app";
 
     private void setCorsHeaders(HttpServletResponse response) {
         response.setHeader("Access-Control-Allow-Origin", FRONTEND_URL);
