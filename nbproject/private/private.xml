@@ -4,8 +4,12 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/web/WEB-INF/web.xml</file>
-            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/config.properties</file>
             <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/DearDreamersBackend/SignupServlet.java</file>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/config.properties</file>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/Dockerfile</file>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/DearDreamersBackend/LoginServlet.java</file>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/DearDreamersBackend/ResultServlet.java</file>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/DearDreamersBackend/SaveScoreServlet.java</file>
         </group>
     </open-files>
 </project-private>

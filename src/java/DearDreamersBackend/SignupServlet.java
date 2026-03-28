@@ -15,12 +15,21 @@ import javax.servlet.http.HttpServletResponse;
 
 public class SignupServlet extends HttpServlet {
 
-   
+    private static final String FRONTEND_URL = "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app";
+
+    private void setCorsHeaders(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", FRONTEND_URL);
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+    }
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        setCorsHeaders(response);
         response.setContentType("text/html;charset=UTF-8");
+
         try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
             out.println("<!DOCTYPE html>");
             out.println("<html>");
             out.println("<head>");
@@ -33,43 +42,39 @@ public class SignupServlet extends HttpServlet {
         }
     }
 
-   
+    @Override
+    protected void doOptions(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        setCorsHeaders(response);
+        response.setStatus(HttpServletResponse.SC_OK);
+    }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
     }
 
-    
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        //processRequest(request, response);
-        
-        response.setHeader("Access-Control-Allow-Origin","http://localhost:3000");
-        response.setHeader("Access-Control-Allow-Methods","POST");
-        response.setHeader("Access-Control-Allow-Headers","Content-Type");
-        
-        response.setContentType("application/json");
-   
-        response.setCharacterEncoding("UTF-8");
-        
-        
-        PrintWriter pw=response.getWriter();
-        
-        String name=request.getParameter("name");
-        String lname=request.getParameter("lastName");
-        String age=request.getParameter("age");
-        String email=request.getParameter("email");
-        String passW=request.getParameter("password");
-         
-        
-        Connection con = null;
-        PreparedStatement ps =null;
-        
-         try {
 
-            // Load config.properties
+        setCorsHeaders(response);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
+        PrintWriter pw = response.getWriter();
+
+        String name = request.getParameter("name");
+        String lname = request.getParameter("lastName");
+        String age = request.getParameter("age");
+        String email = request.getParameter("email");
+        String passW = request.getParameter("password");
+
+        Connection con = null;
+        PreparedStatement ps = null;
+
+        try {
             Properties prop = new Properties();
             InputStream input = getClass()
                     .getClassLoader()
@@ -81,13 +86,9 @@ public class SignupServlet extends HttpServlet {
             String dbUser = prop.getProperty("db.username");
             String dbPass = prop.getProperty("db.password");
 
-            // Load MySQL driver
             Class.forName("com.mysql.cj.jdbc.Driver");
-
-            // Create database connection
             con = DriverManager.getConnection(dbUrl, dbUser, dbPass);
 
-            // SQL Query
             ps = con.prepareStatement(
                     "INSERT INTO students(first_name,last_name,age,email,s_password) VALUES(?,?,?,?,?)"
             );
@@ -101,21 +102,19 @@ public class SignupServlet extends HttpServlet {
             int rows = ps.executeUpdate();
 
             if (rows > 0) {
-                pw.print("{\"message\":\"Registration successful!\"}");
+                pw.print("Registration successful!");
             } else {
-                pw.print("{\"message\":\"Registration failed.\"}");
+                pw.print("Registration failed.");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            pw.print("{\"message\":\"Error: " + e.getMessage() + "\"}");
+            pw.print("Error: " + e.getMessage());
         } finally {
-            try{
+            try {
                 if (ps != null) ps.close();
                 if (con != null) con.close();
-        } catch (SQLException ignored) {}
+            } catch (SQLException ignored) {}
         }
-     
-        } 
-        
     }
+}

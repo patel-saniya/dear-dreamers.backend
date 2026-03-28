@@ -13,20 +13,31 @@ import javax.servlet.http.HttpSession;
 
 public class SaveScoreServlet extends HttpServlet {
 
+    private static final String FRONTEND_URL = "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app";
+
+    private void setCorsHeaders(HttpServletResponse response) {
+        response.setHeader("Access-Control-Allow-Origin", FRONTEND_URL);
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+    }
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+
+        setCorsHeaders(response);
         response.setContentType("text/html;charset=UTF-8");
+
         try (PrintWriter out = response.getWriter()) {
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet SaveScoreServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet SaveScoreServlet at " + request.getContextPath() + "</h1>");
-            out.println("</body>");
-            out.println("</html>");
+            out.println("<h1>SaveScoreServlet Running</h1>");
         }
+    }
+
+    @Override
+    protected void doOptions(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        setCorsHeaders(response);
+        response.setStatus(HttpServletResponse.SC_OK);
     }
 
     @Override
@@ -39,17 +50,14 @@ public class SaveScoreServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        response.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
-        response.setHeader("Access-Control-Allow-Method", "POST");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
+        setCorsHeaders(response);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
         PrintWriter pw = response.getWriter();
 
-        // 🔹 Session Check
+        // ✅ Session check
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("student_id") == null) {
             pw.print("{\"message\":\"Not logged in\"}");
@@ -58,7 +66,7 @@ public class SaveScoreServlet extends HttpServlet {
 
         int studentId = (int) session.getAttribute("student_id");
 
-        // 🔹 Get data from React
+        // ✅ Get data
         String alphabet = request.getParameter("alphabet");
         int correctCount = Integer.parseInt(request.getParameter("correct_count"));
         int wrongCount = Integer.parseInt(request.getParameter("wrong_count"));
@@ -71,7 +79,6 @@ public class SaveScoreServlet extends HttpServlet {
         ResultSet rs = null;
 
         try {
-             // Load config.properties
             Properties prop = new Properties();
             InputStream input = getClass()
                     .getClassLoader()
@@ -83,12 +90,11 @@ public class SaveScoreServlet extends HttpServlet {
             String dbUser = prop.getProperty("db.username");
             String dbPass = prop.getProperty("db.password");
 
-            // Load MySQL driver
             Class.forName("com.mysql.cj.jdbc.Driver");
 
-            // Create connection
             con = DriverManager.getConnection(dbUrl, dbUser, dbPass);
-            // 🔹 CHECK IF RECORD EXISTS
+
+            // ✅ Check if exists
             checkPs = con.prepareStatement(
                     "SELECT student_id FROM quiz_score WHERE student_id = ? AND alphabet = ?"
             );
@@ -99,7 +105,7 @@ public class SaveScoreServlet extends HttpServlet {
 
             if (rs.next()) {
 
-                // 🔹 UPDATE EXISTING RECORD
+                // UPDATE
                 updatePs = con.prepareStatement(
                         "UPDATE quiz_score SET correct_count = ?, wrong_count = ?, score = ? " +
                         "WHERE student_id = ? AND alphabet = ?"
@@ -117,11 +123,9 @@ public class SaveScoreServlet extends HttpServlet {
 
             } else {
 
-                // 🔹 INSERT NEW RECORD
+                // INSERT
                 insertPs = con.prepareStatement(
-                        "INSERT INTO quiz_score " +
-                        "(student_id, alphabet, correct_count, wrong_count, score) " +
-                        "VALUES (?,?,?,?,?)"
+                        "INSERT INTO quiz_score (student_id, alphabet, correct_count, wrong_count, score) VALUES (?,?,?,?,?)"
                 );
 
                 insertPs.setInt(1, studentId);
