@@ -16,9 +16,11 @@ public class SaveScoreServlet extends HttpServlet {
     private void setCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
         String origin = request.getHeader("Origin");
 
-        if ("https://dear-dreamers-frontend.vercel.app".equals(origin)
-                || "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin)
-                || "http://localhost:3000".equals(origin)) {
+        if (origin != null &&
+            (origin.equals("https://dear-dreamers-frontend.vercel.app")
+            || origin.equals("https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app")
+            || origin.equals("http://localhost:3000")
+            || origin.endsWith(".vercel.app"))) {
             response.setHeader("Access-Control-Allow-Origin", origin);
         }
 
@@ -121,7 +123,8 @@ public class SaveScoreServlet extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            pw.print("{\"message\":\"Error saving score: " + e.getMessage().replace("\"", "\\\"") + "\"}");
+            String safeMessage = e.getMessage() == null ? "Unknown error" : e.getMessage().replace("\"", "\\\"");
+            pw.print("{\"message\":\"Error saving score: " + safeMessage + "\"}");
         }
     }
 }
