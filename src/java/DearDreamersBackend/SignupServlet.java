@@ -36,19 +36,11 @@ public class SignupServlet extends HttpServlet {
     }
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        setCorsHeaders(request, response);
-        response.setContentType("text/plain;charset=UTF-8");
-        response.getWriter().print("SignupServlet is running");
-    }
-
-    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         setCorsHeaders(request, response);
-        response.setContentType("text/plain;charset=UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
 
         PrintWriter pw = response.getWriter();
 
@@ -58,15 +50,12 @@ public class SignupServlet extends HttpServlet {
         String email = request.getParameter("email");
         String passW = request.getParameter("password");
 
-        Connection con = null;
-        PreparedStatement ps = null;
-
-        try {
-            con = DBUtil.getConnection();
-
-            ps = con.prepareStatement(
+        try (
+            Connection con = DBUtil.getConnection();
+            PreparedStatement ps = con.prepareStatement(
                 "INSERT INTO students(first_name, last_name, age, email, s_password) VALUES (?, ?, ?, ?, ?)"
-            );
+            )
+        ) {
 
             ps.setString(1, name);
             ps.setString(2, lname);
@@ -77,20 +66,15 @@ public class SignupServlet extends HttpServlet {
             int rows = ps.executeUpdate();
 
             if (rows > 0) {
-                pw.print("Registration successful!");
+                pw.print("{\"message\":\"Registration successful\"}");
             } else {
-                pw.print("Registration failed.");
+                pw.print("{\"message\":\"Registration failed\"}");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            pw.print("Error: " + e.getMessage());
-        } finally {
-            try {
-                if (ps != null) ps.close();
-                if (con != null) con.close();
-            } catch (SQLException ignored) {
-            }
+            String msg = e.getMessage() == null ? "Error" : e.getMessage().replace("\"", "\\\"");
+            pw.print("{\"message\":\"Error: " + msg + "\"}");
         }
     }
 }
