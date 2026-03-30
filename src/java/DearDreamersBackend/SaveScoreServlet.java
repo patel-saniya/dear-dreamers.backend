@@ -26,7 +26,7 @@ public class SaveScoreServlet extends HttpServlet {
 
         response.setHeader("Vary", "Origin");
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
         response.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
@@ -54,13 +54,29 @@ public class SaveScoreServlet extends HttpServlet {
 
         PrintWriter pw = response.getWriter();
 
+        Integer studentId = null;
+
         HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("student_id") == null) {
+        if (session != null && session.getAttribute("student_id") != null) {
+            studentId = (Integer) session.getAttribute("student_id");
+        }
+
+        if (studentId == null) {
+            String studentIdParam = request.getParameter("student_id");
+            if (studentIdParam != null && !studentIdParam.trim().isEmpty()) {
+                try {
+                    studentId = Integer.parseInt(studentIdParam.trim());
+                } catch (NumberFormatException e) {
+                    pw.print("{\"message\":\"Invalid student_id\"}");
+                    return;
+                }
+            }
+        }
+
+        if (studentId == null) {
             pw.print("{\"message\":\"Not logged in\"}");
             return;
         }
-
-        int studentId = (Integer) session.getAttribute("student_id");
 
         String alphabet = request.getParameter("alphabet");
         String correctCountStr = request.getParameter("correct_count");

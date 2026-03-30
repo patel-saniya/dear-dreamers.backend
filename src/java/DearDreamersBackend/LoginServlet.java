@@ -6,7 +6,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -50,7 +49,7 @@ public class LoginServlet extends HttpServlet {
             throws ServletException, IOException {
 
         setCorsHeaders(request, response);
-        response.setContentType("text/plain;charset=UTF-8");
+        response.setContentType("application/json;charset=UTF-8");
 
         PrintWriter out = response.getWriter();
 
@@ -60,11 +59,11 @@ public class LoginServlet extends HttpServlet {
         if (email == null || password == null
                 || email.trim().isEmpty()
                 || password.trim().isEmpty()) {
-            out.print("Email and password are required");
+            out.print("{\"message\":\"Email and password are required\"}");
             return;
         }
 
-        String sql = "SELECT student_id FROM students WHERE email = ? AND s_password = ?";
+        String sql = "SELECT student_id, first_name FROM students WHERE email = ? AND s_password = ?";
 
         try (
             Connection con = DBUtil.getConnection();
@@ -76,33 +75,31 @@ public class LoginServlet extends HttpServlet {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     int studentId = rs.getInt("student_id");
+                    String firstName = rs.getString("first_name");
+                    if (firstName == null) {
+                        firstName = "";
+                    }
 
                     HttpSession session = request.getSession(true);
                     session.setAttribute("student_id", studentId);
                     session.setMaxInactiveInterval(60 * 60);
 
-                    String sessionId = session.getId();
+                    firstName = firstName.replace("\\", "\\\\").replace("\"", "\\\"");
 
-                    Cookie cookie = new Cookie("JSESSIONID", sessionId);
-                    cookie.setHttpOnly(true);
-                    cookie.setSecure(true);
-                    cookie.setPath("/");
-                    response.addCookie(cookie);
-
-                    response.addHeader(
-                        "Set-Cookie",
-                        "JSESSIONID=" + sessionId + "; Path=/; HttpOnly; Secure; SameSite=None"
-                    );
-
-                    out.print("Login successful");
+                    out.print("{");
+                    out.print("\"message\":\"Login successful\",");
+                    out.print("\"student_id\":" + studentId + ",");
+                    out.print("\"first_name\":\"" + firstName + "\"");
+                    out.print("}");
                 } else {
-                    out.print("Invalid Email or Password");
+                    out.print("{\"message\":\"Invalid Email or Password\"}");
                 }
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            out.print("Error: " + ex.getMessage());
+            String msg = ex.getMessage() == null ? "Unknown error" : ex.getMessage().replace("\"", "\\\"");
+            out.print("{\"message\":\"Error: " + msg + "\"}");
         }
     }
 }

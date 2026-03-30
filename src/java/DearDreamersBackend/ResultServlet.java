@@ -52,14 +52,30 @@ public class ResultServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
 
         PrintWriter pw = response.getWriter();
-        HttpSession session = request.getSession(false);
 
-        if (session == null || session.getAttribute("student_id") == null) {
+        Integer studentId = null;
+
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("student_id") != null) {
+            studentId = (Integer) session.getAttribute("student_id");
+        }
+
+        if (studentId == null) {
+            String studentIdParam = request.getParameter("student_id");
+            if (studentIdParam != null && !studentIdParam.trim().isEmpty()) {
+                try {
+                    studentId = Integer.parseInt(studentIdParam.trim());
+                } catch (NumberFormatException e) {
+                    pw.print("[]");
+                    return;
+                }
+            }
+        }
+
+        if (studentId == null) {
             pw.print("[]");
             return;
         }
-
-        int studentId = (Integer) session.getAttribute("student_id");
 
         String sql = "SELECT alphabet, correct_count, wrong_count, score FROM quiz_score WHERE student_id = ? ORDER BY alphabet";
 

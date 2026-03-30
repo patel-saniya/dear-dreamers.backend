@@ -2,6 +2,12 @@
 <project-private xmlns="http://www.netbeans.org/ns/project-private/1">
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-        <group/>
+        <group>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/DearDreamersBackend/DBUtil.java</file>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/DearDreamersBackend/LoginServlet.java</file>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/DearDreamersBackend/ResultServlet.java</file>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/DearDreamersBackend/SaveScoreServlet.java</file>
+            <file>file:/C:/Users/Nilofer%20Patel/Desktop/NetBeansProjects/DearDreamersApp/src/java/DearDreamersBackend/SignupServlet.java</file>
+        </group>
     </open-files>
 </project-private>
