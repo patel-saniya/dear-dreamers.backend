@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,15 +17,16 @@ public class LoginServlet extends HttpServlet {
     private void setCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
         String origin = request.getHeader("Origin");
 
-        if ("https://dear-dreamers-frontend.vercel.app".equals(origin)
-                || "https://dear-dreamers-frontend-cm9l-hi91fl1r9.vercel.app".equals(origin)
-                || "http://localhost:3000".equals(origin)) {
+        if (origin != null &&
+            (origin.equals("http://localhost:3000")
+            || origin.equals("https://dear-dreamers-frontend.vercel.app")
+            || origin.endsWith(".vercel.app"))) {
             response.setHeader("Access-Control-Allow-Origin", origin);
         }
 
         response.setHeader("Vary", "Origin");
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        response.setHeader("Access-Control-Allow-Headers", "Content-Type");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
         response.setHeader("Access-Control-Allow-Credentials", "true");
     }
 
@@ -50,11 +52,15 @@ public class LoginServlet extends HttpServlet {
         setCorsHeaders(request, response);
         response.setContentType("text/plain;charset=UTF-8");
 
+        PrintWriter out = response.getWriter();
+
         String email = request.getParameter("email");
         String password = request.getParameter("password");
 
-        if (email == null || password == null || email.trim().isEmpty() || password.trim().isEmpty()) {
-            response.getWriter().print("Email and password are required");
+        if (email == null || password == null
+                || email.trim().isEmpty()
+                || password.trim().isEmpty()) {
+            out.print("Email and password are required");
             return;
         }
 
@@ -73,16 +79,30 @@ public class LoginServlet extends HttpServlet {
 
                     HttpSession session = request.getSession(true);
                     session.setAttribute("student_id", studentId);
+                    session.setMaxInactiveInterval(60 * 60);
 
-                    response.getWriter().print("Login successful");
+                    String sessionId = session.getId();
+
+                    Cookie cookie = new Cookie("JSESSIONID", sessionId);
+                    cookie.setHttpOnly(true);
+                    cookie.setSecure(true);
+                    cookie.setPath("/");
+                    response.addCookie(cookie);
+
+                    response.addHeader(
+                        "Set-Cookie",
+                        "JSESSIONID=" + sessionId + "; Path=/; HttpOnly; Secure; SameSite=None"
+                    );
+
+                    out.print("Login successful");
                 } else {
-                    response.getWriter().print("Invalid Email or Password");
+                    out.print("Invalid Email or Password");
                 }
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            response.getWriter().print("Error: " + ex.getMessage());
+            out.print("Error: " + ex.getMessage());
         }
     }
 }
